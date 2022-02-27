@@ -6,7 +6,8 @@ package diff_test
 
 import (
 	"fmt"
-	"github.com/mb0/diff"
+
+	"github.com/echlebek/diff"
 )
 
 // Diff on inputs with different representations

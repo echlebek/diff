@@ -7,7 +7,7 @@ package diff_test
 import (
 	"testing"
 
-	"github.com/mb0/diff"
+	"github.com/echlebek/diff"
 )
 
 type testcase struct {
