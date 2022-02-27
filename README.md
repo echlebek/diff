@@ -31,4 +31,4 @@ Also has granularity functions to merge changes that are close by.
 
     diff.Granular(1, diff.ByteStrings("emtire", "umpire")) // returns []Changes{{0,0,3,3}}
 
-Documentation at http://godoc.org/github.com/mb0/diff
+Documentation at https://pkg.go.dev/github.com/echlebek/diff
