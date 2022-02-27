@@ -5,8 +5,9 @@
 package diff_test
 
 import (
-	"github.com/mb0/diff"
 	"testing"
+
+	"github.com/mb0/diff"
 )
 
 type testcase struct {
@@ -19,28 +20,28 @@ var tests = []testcase{
 	{"shift",
 		[]int{1, 2, 3},
 		[]int{0, 1, 2, 3},
-		[]diff.Change{{0, 0, 0, 1}},
+		[]diff.Change{{A: 0, B: 0, Del: 0, Ins: 1}},
 	},
 	{"push",
 		[]int{1, 2, 3},
 		[]int{1, 2, 3, 4},
-		[]diff.Change{{3, 3, 0, 1}},
+		[]diff.Change{{A: 3, B: 3, Del: 0, Ins: 1}},
 	},
 	{"unshift",
 		[]int{0, 1, 2, 3},
 		[]int{1, 2, 3},
-		[]diff.Change{{0, 0, 1, 0}},
+		[]diff.Change{{A: 0, B: 0, Del: 1, Ins: 0}},
 	},
 	{"pop",
 		[]int{1, 2, 3, 4},
 		[]int{1, 2, 3},
-		[]diff.Change{{3, 3, 1, 0}},
+		[]diff.Change{{A: 3, B: 3, Del: 1, Ins: 0}},
 	},
 	{"all changed",
 		[]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
 		[]int{10, 11, 12, 13, 14},
 		[]diff.Change{
-			{0, 0, 10, 5},
+			{A: 0, B: 0, Del: 10, Ins: 5},
 		},
 	},
 	{"all same",
@@ -52,16 +53,16 @@ var tests = []testcase{
 		[]int{1},
 		[]int{0, 1, 2, 3},
 		[]diff.Change{
-			{0, 0, 0, 1},
-			{1, 2, 0, 2},
+			{A: 0, B: 0, Del: 0, Ins: 1},
+			{A: 1, B: 2, Del: 0, Ins: 2},
 		},
 	},
 	{"snake",
 		[]int{0, 1, 2, 3, 4, 5},
 		[]int{1, 2, 3, 4, 5, 6},
 		[]diff.Change{
-			{0, 0, 1, 0},
-			{6, 5, 0, 1},
+			{A: 0, B: 0, Del: 1, Ins: 0},
+			{A: 6, B: 5, Del: 0, Ins: 1},
 		},
 	},
 	// note: input is ambiguous
@@ -71,10 +72,10 @@ var tests = []testcase{
 		[]int{1, 2, 3, 1, 2, 2, 1},
 		[]int{3, 2, 1, 2, 1, 3},
 		[]diff.Change{
-			{0, 0, 1, 1},
-			{2, 2, 1, 0},
-			{5, 4, 1, 0},
-			{7, 5, 0, 1},
+			{A: 0, B: 0, Del: 1, Ins: 1},
+			{A: 2, B: 2, Del: 1, Ins: 0},
+			{A: 5, B: 4, Del: 1, Ins: 0},
+			{A: 7, B: 5, Del: 0, Ins: 1},
 		},
 	},
 }
@@ -97,10 +98,10 @@ func TestDiffAB(t *testing.T) {
 func TestDiffBA(t *testing.T) {
 	// interesting: fig.1 Diff(b, a) results in the same path as `diff -d a b`
 	tests[len(tests)-1].res = []diff.Change{
-		{0, 0, 2, 0},
-		{3, 1, 1, 0},
-		{5, 2, 0, 1},
-		{7, 5, 0, 1},
+		{A: 0, B: 0, Del: 2, Ins: 0},
+		{A: 3, B: 1, Del: 1, Ins: 0},
+		{A: 5, B: 2, Del: 0, Ins: 1},
+		{A: 7, B: 5, Del: 0, Ins: 1},
 	}
 	for _, test := range tests {
 		res := diff.Ints(test.b, test.a)
@@ -110,7 +111,7 @@ func TestDiffBA(t *testing.T) {
 		}
 		for i, c := range test.res {
 			// flip change data also
-			rc := diff.Change{c.B, c.A, c.Ins, c.Del}
+			rc := diff.Change{A: c.B, B: c.A, Del: c.Ins, Ins: c.Del}
 			if rc != res[i] {
 				t.Error(test.name, "expected ", rc, "got", res[i])
 			}
@@ -135,13 +136,13 @@ func TestGranularStrings(t *testing.T) {
 	b := "AbCdeFghiJklmnOpqrstUvwxyzab"
 	// each iteration of i increases granularity and will absorb one more lower-letter-followed-by-upper-letters sequence
 	changesI := [][]diff.Change{
-		{{0, 0, 1, 1}, {2, 2, 1, 1}, {5, 5, 1, 1}, {9, 9, 1, 1}, {14, 14, 1, 1}, {20, 20, 1, 1}, {27, 27, 0, 1}},
-		{{0, 0, 3, 3}, {5, 5, 1, 1}, {9, 9, 1, 1}, {14, 14, 1, 1}, {20, 20, 1, 1}, {27, 27, 0, 1}},
-		{{0, 0, 6, 6}, {9, 9, 1, 1}, {14, 14, 1, 1}, {20, 20, 1, 1}, {27, 27, 0, 1}},
-		{{0, 0, 10, 10}, {14, 14, 1, 1}, {20, 20, 1, 1}, {27, 27, 0, 1}},
-		{{0, 0, 15, 15}, {20, 20, 1, 1}, {27, 27, 0, 1}},
-		{{0, 0, 21, 21}, {27, 27, 0, 1}},
-		{{0, 0, 27, 28}},
+		{{A: 0, B: 0, Del: 1, Ins: 1}, {A: 2, B: 2, Del: 1, Ins: 1}, {A: 5, B: 5, Del: 1, Ins: 1}, {A: 9, B: 9, Del: 1, Ins: 1}, {A: 14, B: 14, Del: 1, Ins: 1}, {A: 20, B: 20, Del: 1, Ins: 1}, {A: 27, B: 27, Del: 0, Ins: 1}},
+		{{A: 0, B: 0, Del: 3, Ins: 3}, {A: 5, B: 5, Del: 1, Ins: 1}, {A: 9, B: 9, Del: 1, Ins: 1}, {A: 14, B: 14, Del: 1, Ins: 1}, {A: 20, B: 20, Del: 1, Ins: 1}, {A: 27, B: 27, Del: 0, Ins: 1}},
+		{{A: 0, B: 0, Del: 6, Ins: 6}, {A: 9, B: 9, Del: 1, Ins: 1}, {A: 14, B: 14, Del: 1, Ins: 1}, {A: 20, B: 20, Del: 1, Ins: 1}, {A: 27, B: 27, Del: 0, Ins: 1}},
+		{{A: 0, B: 0, Del: 10, Ins: 10}, {A: 14, B: 14, Del: 1, Ins: 1}, {A: 20, B: 20, Del: 1, Ins: 1}, {A: 27, B: 27, Del: 0, Ins: 1}},
+		{{A: 0, B: 0, Del: 15, Ins: 15}, {A: 20, B: 20, Del: 1, Ins: 1}, {A: 27, B: 27, Del: 0, Ins: 1}},
+		{{A: 0, B: 0, Del: 21, Ins: 21}, {A: 27, B: 27, Del: 0, Ins: 1}},
+		{{A: 0, B: 0, Del: 27, Ins: 28}},
 	}
 	for i := 0; i < len(changesI); i++ {
 		diffs := diff.Granular(i, diff.ByteStrings(a, b))
@@ -156,13 +157,13 @@ func TestDiffRunes(t *testing.T) {
 	b := []rune("brwn faax junps ovver the lay dago")
 	res := diff.Runes(a, b)
 	echange := []diff.Change{
-		{2, 2, 1, 0},
-		{7, 6, 1, 2},
-		{12, 12, 1, 1},
-		{18, 18, 0, 1},
-		{27, 28, 1, 0},
-		{31, 31, 0, 2},
-		{32, 34, 1, 0},
+		{A: 2, B: 2, Del: 1, Ins: 0},
+		{A: 7, B: 6, Del: 1, Ins: 2},
+		{A: 12, B: 12, Del: 1, Ins: 1},
+		{A: 18, B: 18, Del: 0, Ins: 1},
+		{A: 27, B: 28, Del: 1, Ins: 0},
+		{A: 31, B: 31, Del: 0, Ins: 2},
+		{A: 32, B: 34, Del: 1, Ins: 0},
 	}
 	for i, c := range res {
 		t.Log(c)
@@ -177,13 +178,13 @@ func TestDiffByteStrings(t *testing.T) {
 	b := "brwn faax junps ovver the lay dago"
 	res := diff.ByteStrings(a, b)
 	echange := []diff.Change{
-		{2, 2, 1, 0},
-		{7, 6, 1, 2},
-		{12, 12, 1, 1},
-		{18, 18, 0, 1},
-		{27, 28, 1, 0},
-		{31, 31, 0, 2},
-		{32, 34, 1, 0},
+		{A: 2, B: 2, Del: 1, Ins: 0},
+		{A: 7, B: 6, Del: 1, Ins: 2},
+		{A: 12, B: 12, Del: 1, Ins: 1},
+		{A: 18, B: 18, Del: 0, Ins: 1},
+		{A: 27, B: 28, Del: 1, Ins: 0},
+		{A: 31, B: 31, Del: 0, Ins: 2},
+		{A: 32, B: 34, Del: 1, Ins: 0},
 	}
 	for i, c := range res {
 		t.Log(c)
